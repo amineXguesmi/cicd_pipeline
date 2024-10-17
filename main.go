@@ -1,6 +1,7 @@
 package main
 
 import (
+	"awesomeProject/config"
 	"awesomeProject/handlers"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -8,7 +9,7 @@ import (
 
 func main() {
 	config.LoadEnv()
-	
+
 	router := gin.Default()
 
 	router.POST("/signup", handlers.Signup)
