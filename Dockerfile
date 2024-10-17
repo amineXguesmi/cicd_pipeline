@@ -19,7 +19,7 @@ RUN touch .env && \
     echo "JWT_SECRET=$JWT_SECRET" >> .env && \
     echo "DB_NAME=$DB_NAME" >> .env
 
-RUN go build -o app .
+RUN ["go", "build", "."]
 
 EXPOSE 8080
 
