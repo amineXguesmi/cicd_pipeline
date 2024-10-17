@@ -69,28 +69,36 @@ func TestSignup_UserExists(t *testing.T) {
 }
 
 // Test 2: Successful Signup
-func TestSignup_Success(t *testing.T) {
-	r := gin.Default()
-	r.POST("/signup", handlers.Signup)
-
-	user := models.User{Email: "newuser@example.com", Password: "password"}
-	reqBody, _ := json.Marshal(user)
-	req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(reqBody))
-	req.Header.Set("Content-Type", "application/json")
-
-	rr := httptest.NewRecorder()
-
-	mockCollection := new(MockCollection)
-	mockCollection.On("FindOne", mock.Anything, bson.M{"email": user.Email}).Return(nil)
-
-	bcryptGenerateFromPassword = func(password []byte, cost int) ([]byte, error) {
-		return []byte("$2a$10$hashedPassword"), nil
-	}
-
-	r.ServeHTTP(rr, req)
-
-	assert.Equal(t, http.StatusCreated, rr.Code)
+// Before running each test, ensure database state is cleaned
+func setup() {
+    // Example: Clean up the users' collection
+    err := db.Collection("users").Drop(context.TODO())
+    if err != nil {
+        log.Fatal(err)
+    }
 }
+
+// TestSignup_Success - use unique test data to avoid 409 conflict
+func TestSignup_Success(t *testing.T) {
+    setup() // Clean state before each test
+
+    newUser := User{
+        Email: "uniqueuser@example.com", // Ensure unique email
+        Password: "ValidPassword123",
+    }
+
+    // Now test the signup
+    w := httptest.NewRecorder()
+    req, _ := http.NewRequest("POST", "/signup", bytes.NewBuffer(jsonPayload))
+    router.ServeHTTP(w, req)
+
+    if w.Code != http.StatusCreated {
+        t.Errorf("Expected status code 201, got %v", w.Code)
+    }
+}
+
+// Ensure database cleanup and reset state before each test
+
 
 // Test 3: Invalid Password
 func TestSignup_InvalidPassword(t *testing.T) {
