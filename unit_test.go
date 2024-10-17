@@ -1,14 +1,29 @@
 package main
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"awesomeProject/handlers"
 	"awesomeProject/models"
 	"awesomeProject/utils"
 	"github.com/golang-jwt/jwt/v4"
-	"testing"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 
 	"awesomeProject/config"
 )
 
+// Test for generating JWT token
 func TestGenerateJWTToken(t *testing.T) {
 	// Define a mock secret key
 	mockSecretKey := "secret"
@@ -23,14 +38,15 @@ func TestGenerateJWTToken(t *testing.T) {
 	jwtClaim := models.JWTToken{}
 
 	_, _ = jwt.ParseWithClaims(tokenString, &jwtClaim, func(token *jwt.Token) (interface{}, error) {
-		return "secret", nil
+		return []byte(mockSecretKey), nil
 	})
 
 	if jwtClaim.ID != "user123" {
 		t.Errorf("token mismatch")
 	}
-
 }
+
+// MockCollection for testing MongoDB operations
 type MockCollection struct {
 	mock.Mock
 }
@@ -55,6 +71,7 @@ func (m *MockMongoClient) Database(name string, opts ...*options.DatabaseOptions
 	return args.Get(0).(*mongo.Database)
 }
 
+// Test for user already existing in signup
 func TestSignup_UserAlreadyExists(t *testing.T) {
 	// Set up Gin router
 	gin.SetMode(gin.TestMode)
@@ -87,6 +104,7 @@ func TestSignup_UserAlreadyExists(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Username already exists")
 }
 
+// Test for hashing password in signup
 func TestSignup_HashesPassword(t *testing.T) {
 	// Set up Gin router
 	gin.SetMode(gin.TestMode)
@@ -125,6 +143,7 @@ func TestSignup_HashesPassword(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "User created successfully")
 }
 
+// Test for failed password hashing in signup
 func TestSignup_FailedToHashPassword(t *testing.T) {
 	// Set up Gin router
 	gin.SetMode(gin.TestMode)
@@ -158,6 +177,7 @@ func TestSignup_FailedToHashPassword(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Failed to hash password")
 }
 
+// Test for login with invalid credentials
 func TestLogin_InvalidCredentials(t *testing.T) {
 	// Set up Gin router
 	gin.SetMode(gin.TestMode)
@@ -190,6 +210,7 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Invalid credentials")
 }
 
+// Test for login with valid credentials
 func TestLogin_ValidCredentials(t *testing.T) {
 	// Set up Gin router
 	gin.SetMode(gin.TestMode)
