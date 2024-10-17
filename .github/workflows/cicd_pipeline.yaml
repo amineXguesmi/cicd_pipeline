@@ -65,7 +65,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest  
+          tags: aminexguesmi/auth-ms:latest  
           build-args: |
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
