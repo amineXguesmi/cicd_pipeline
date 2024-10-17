@@ -12,6 +12,7 @@ import (
     "golang.org/x/crypto/bcrypt"
     "net/http"
     "net/http/httptest"
+    "os"
     "testing"
     "awesomeProject/models"
     "awesomeProject/handlers"
@@ -27,6 +28,19 @@ type MockCollection struct {
 func (m *MockCollection) FindOne(ctx context.Context, filter interface{}) *mongo.SingleResult {
     args := m.Called(ctx, filter)
     return args.Get(0).(*mongo.SingleResult)
+}
+
+func TestMain(m *testing.M) {
+    // Set the ENV to "test" to skip .env loading
+    os.Setenv("ENV", "test")
+
+    // Run tests
+    code := m.Run()
+
+    // Clean up or reset environment variables if needed
+    os.Unsetenv("ENV")
+
+    os.Exit(code)
 }
 
 // Test 1: User Already Exists
