@@ -51,6 +51,7 @@ func TestMain(m *testing.M) {
 }
 
 // Test 1: User Already Exists
+// Test 1: User Already Exists
 func TestSignup_UserExists(t *testing.T) {
 	// Setup
 	r := gin.Default()
@@ -64,7 +65,11 @@ func TestSignup_UserExists(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	mockCollection := new(MockCollection)
+	// Simulate an existing user by returning a valid single result
 	mockCollection.On("FindOne", mock.Anything, bson.M{"email": user.Email}).Return(mongo.NewSingleResultFromDocument(user, nil, nil))
+
+	// Replace the actual collection in the handler with the mocked one
+	handlers.SetUserCollection(mockCollection)
 
 	r.ServeHTTP(rr, req)
 
@@ -91,8 +96,12 @@ func TestSignup_Success(t *testing.T) {
 
 	// Mock MongoDB Collection
 	mockCollection := new(MockCollection)
-	mockCollection.On("FindOne", mock.Anything, bson.M{"email": newUser.Email}).Return(mongo.NewSingleResultFromDocument(nil, nil, nil)) // No existing user
+	// Return no existing user
+	mockCollection.On("FindOne", mock.Anything, bson.M{"email": newUser.Email}).Return(mongo.NewSingleResult()) // Simulate no existing user
 	mockCollection.On("InsertOne", mock.Anything, mock.Anything).Return(&mongo.InsertOneResult{}, nil) // Successful insert
+
+	// Replace the actual collection in the handler with the mocked one
+	handlers.SetUserCollection(mockCollection)
 
 	// Perform test
 	r.ServeHTTP(rr, req)
