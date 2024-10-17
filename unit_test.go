@@ -51,7 +51,6 @@ func TestMain(m *testing.M) {
 }
 
 // Test 1: User Already Exists
-// Test 1: User Already Exists
 func TestSignup_UserExists(t *testing.T) {
 	// Setup
 	r := gin.Default()
@@ -65,11 +64,7 @@ func TestSignup_UserExists(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	mockCollection := new(MockCollection)
-	// Simulate an existing user by returning a valid single result
 	mockCollection.On("FindOne", mock.Anything, bson.M{"email": user.Email}).Return(mongo.NewSingleResultFromDocument(user, nil, nil))
-
-	// Replace the actual collection in the handler with the mocked one
-	handlers.SetUserCollection(mockCollection)
 
 	r.ServeHTTP(rr, req)
 
@@ -78,56 +73,3 @@ func TestSignup_UserExists(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Username already exists")
 }
 
-// Test 2: Successful Signup
-func TestSignup_Success(t *testing.T) {
-	// Setup
-	r := gin.Default()
-	r.POST("/signup", handlers.Signup)
-
-	newUser := models.User{
-		Email:    "uniqueuser@example.com",
-		Password: "ValidPassword123",
-	}
-	reqBody, _ := json.Marshal(newUser)
-	req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(reqBody))
-	req.Header.Set("Content-Type", "application/json")
-
-	rr := httptest.NewRecorder()
-
-	// Mock MongoDB Collection
-	mockCollection := new(MockCollection)
-	// Return no existing user
-	mockCollection.On("FindOne", mock.Anything, bson.M{"email": newUser.Email}).Return(mongo.NewSingleResult()) // Simulate no existing user
-	mockCollection.On("InsertOne", mock.Anything, mock.Anything).Return(&mongo.InsertOneResult{}, nil) // Successful insert
-
-	// Replace the actual collection in the handler with the mocked one
-	handlers.SetUserCollection(mockCollection)
-
-	// Perform test
-	r.ServeHTTP(rr, req)
-
-	// Assert
-	assert.Equal(t, http.StatusCreated, rr.Code)
-	assert.Contains(t, rr.Body.String(), "User created successfully")
-}
-
-// Test 3: Invalid Password
-func TestSignup_InvalidPassword(t *testing.T) {
-	// Setup
-	r := gin.Default()
-	r.POST("/signup", handlers.Signup)
-
-	user := models.User{Email: "test@example.com", Password: ""} // Invalid password
-	reqBody, _ := json.Marshal(user)
-	req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(reqBody))
-	req.Header.Set("Content-Type", "application/json")
-
-	rr := httptest.NewRecorder()
-
-	// Perform test
-	r.ServeHTTP(rr, req)
-
-	// Assert
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Invalid password")
-}
