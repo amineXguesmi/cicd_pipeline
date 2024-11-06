@@ -39,12 +39,27 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: go test -v ./unit_test.go
- 
 
-  docker-build:
+  sonarqube-analysis:
     needs: build-and-test
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.host.url=https://sonarcloud.io
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker-build:
+    needs: sonarqube-analysis
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -57,20 +72,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Debug Docker Tag
-        run: echo " Docker tag ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest"
+        run: echo "Docker tag ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: aminexguesmi/auth-ms:latest  
+          tags: aminexguesmi/auth-ms:latest
           build-args: |
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             DB_NAME=${{ secrets.DB_NAME }}
-
 
       - name: Verify Docker image
         run: docker images
