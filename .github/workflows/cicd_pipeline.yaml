@@ -39,11 +39,17 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: go test -v ./unit_test.go
-
-      - name: Snyk test for Go dependencies
-        uses: snyk/actions/node@master
+  snyk-test:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: snyk/actions/setup@master
+      - uses: actions/setup-go@v4
         with:
-          snyk-token: ${{ secrets.SNYK_TOKEN }}
+          go-version: '1.22'
+      - name: Snyk monitor
+        run: snyk test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
