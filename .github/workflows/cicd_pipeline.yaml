@@ -104,7 +104,7 @@ jobs:
 
       - name: Verify Docker image
         run: docker images
-        
+
       - name: Run Snyk to check Docker image for vulnerabilities
 
         uses: snyk/actions/docker@master
@@ -112,10 +112,6 @@ jobs:
 
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: your/image-to-test
+          image: aminexguesmi/auth-ms:latest
           args: --file=Dockerfile
         continue-on-error: true
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: snyk.sarif
