@@ -40,6 +40,13 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
         run: go test -v ./unit_test.go
 
+      - name: Snyk test for Go dependencies
+        uses: snyk/actions/go@v2
+        with:
+          snyk-token: ${{ secrets.SNYK_TOKEN }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
   sonarqube-analysis:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -89,3 +96,9 @@ jobs:
 
       - name: Verify Docker image
         run: docker images
+
+      - name: Snyk test for Docker image
+        uses: snyk/actions/docker@v2
+        with:
+          snyk-token: ${{ secrets.SNYK_TOKEN }}
+          image: aminexguesmi/auth-ms:latest

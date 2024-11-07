@@ -33,24 +33,17 @@ func (m *MockCollection) InsertOne(ctx context.Context, document interface{}) (*
 	return args.Get(0).(*mongo.InsertOneResult), args.Error(1)
 }
 
-// Setup test environment
 func TestMain(m *testing.M) {
-	// Set the ENV to "test" to skip .env loading
 	os.Setenv("ENV", "test")
-
-	// Manually call LoadEnv() to load environment variables in tests
 	config.LoadEnv()
-
-	// Run tests
 	code := m.Run()
 
-	// Clean up or reset environment variables if needed
 	os.Unsetenv("ENV")
 
 	os.Exit(code)
 }
 
-// Test 1: User Already Exists
+
 func TestSignup_UserExists(t *testing.T) {
 	// Setup
 	r := gin.Default()
