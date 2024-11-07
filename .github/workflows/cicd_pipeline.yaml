@@ -41,7 +41,7 @@ jobs:
         run: go test -v ./unit_test.go
 
       - name: Snyk test for Go dependencies
-        uses: snyk/actions/go@v2
+        uses: snyk/actions/node@master
         with:
           snyk-token: ${{ secrets.SNYK_TOKEN }}
         env:
@@ -98,7 +98,7 @@ jobs:
         run: docker images
 
       - name: Snyk test for Docker image
-        uses: snyk/actions/docker@v2
+        uses: snyk/actions/node@master
         with:
           snyk-token: ${{ secrets.SNYK_TOKEN }}
           image: aminexguesmi/auth-ms:latest
