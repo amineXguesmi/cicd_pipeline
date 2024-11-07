@@ -104,13 +104,7 @@ jobs:
 
       - name: Verify Docker image
         run: docker images
-
-      - name: Snyk test for Docker image
-        uses: snyk/actions/docker@v1  
-        with:
-          image: aminexguesmi/auth-ms:latest
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
       - name: Run Snyk to check Docker image for vulnerabilities
 
         uses: snyk/actions/docker@master
