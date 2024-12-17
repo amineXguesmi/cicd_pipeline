@@ -32,7 +32,7 @@ We welcome contributions to improve this project. Whether it's fixing a bug, add
 5. **Run Tests**:
    - Ensure that all tests pass before submitting your changes:
      ```bash
-     poetry run pytest
+     go test
      ```
 
 6. **Commit Your Changes**:
