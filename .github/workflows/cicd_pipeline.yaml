@@ -127,7 +127,7 @@ jobs:
 
       - name: Container Security Scanning with trivy
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image auth-ms:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest
           if [ $? -ne 0 ]; then
             echo "Security vulnerabilities found, stopping workflow."
             exit 1
