@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'documentation/**'    
+      
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'documentation/**'
 
 jobs:
   build-and-test:
