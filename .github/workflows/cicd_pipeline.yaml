@@ -30,15 +30,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Validate Secrets
+        run: |
+          if [[ -z "${{ secrets.MONGODB_URI }}" || -z "${{ secrets.JWT_SECRET }}" || -z "${{ secrets.DB_NAME }}" ]]; then
+            echo "Missing required secrets. Check your repository settings."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: go mod tidy
 
-      - name: Run unit tests
+      - name: Run unit tests and collect coverage
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: go test -v ./unit_test.go
+        run: |
+          go test -v -coverprofile=coverage.out ./...
 
   snyk-test:
     needs: build-and-test
@@ -69,6 +77,7 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -96,7 +105,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: aminexguesmi/auth-ms:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest
+          cache-to: type=inline
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest
           build-args: |
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -106,12 +117,10 @@ jobs:
         run: docker images
 
       - name: Run Snyk to check Docker image for vulnerabilities
-
         uses: snyk/actions/docker@master
         env:
-
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: aminexguesmi/auth-ms:latest
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/auth-ms:latest
           args: --file=Dockerfile
         continue-on-error: true
